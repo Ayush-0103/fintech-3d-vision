@@ -1,39 +1,57 @@
 import { useState } from "react";
+import { predictLoan, PredictionResult } from "@/services/loanService";
+import PredictionResults from "@/components/PredictionResults";
+import AIChatWidget from "@/components/AIChatWidget";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const [formData, setFormData] = useState({
-    dependents: "",
-    income: "",
-    loanAmount: "",
-    loanTerm: "",
-    cibilScore: "",
-    residentialAssets: "",
-    commercialAssets: "",
-    luxuryAssets: "",
-    bankAssets: "",
+    no_of_dependents: "",
+    income_annum: "",
+    loan_amount: "",
+    loan_term: "",
+    cibil_score: "",
+    residential_assets_value: "",
+    commercial_assets_value: "",
+    luxury_assets_value: "",
+    bank_asset_value: "",
     education: "Graduate",
-    selfEmployed: "Yes",
+    self_employed: "Yes",
   });
+  const [result, setResult] = useState<PredictionResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Prediction submitted! (Connect your ML backend to get results)");
+    setIsLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const prediction = await predictLoan(formData);
+      setResult(prediction);
+    } catch {
+      setError("Could not connect to the prediction server. Make sure your Flask backend is running.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fields = [
-    { name: "dependents", label: "Dependents", type: "number", icon: "👥" },
-    { name: "income", label: "Income", type: "number", icon: "💰" },
-    { name: "loanAmount", label: "Loan Amount", type: "number", icon: "🏦" },
-    { name: "loanTerm", label: "Loan Term (months)", type: "number", icon: "📅" },
-    { name: "cibilScore", label: "CIBIL Score", type: "number", icon: "📊" },
-    { name: "residentialAssets", label: "Residential Assets", type: "number", icon: "🏠" },
-    { name: "commercialAssets", label: "Commercial Assets", type: "number", icon: "🏢" },
-    { name: "luxuryAssets", label: "Luxury Assets", type: "number", icon: "💎" },
-    { name: "bankAssets", label: "Bank Assets", type: "number", icon: "🏧" },
+    { name: "no_of_dependents", label: "Dependents", icon: "👥" },
+    { name: "income_annum", label: "Income (Annual)", icon: "💰" },
+    { name: "loan_amount", label: "Loan Amount", icon: "🏦" },
+    { name: "loan_term", label: "Loan Term (months)", icon: "📅" },
+    { name: "cibil_score", label: "CIBIL Score", icon: "📊" },
+    { name: "residential_assets_value", label: "Residential Assets", icon: "🏠" },
+    { name: "commercial_assets_value", label: "Commercial Assets", icon: "🏢" },
+    { name: "luxury_assets_value", label: "Luxury Assets", icon: "💎" },
+    { name: "bank_asset_value", label: "Bank Assets", icon: "🏧" },
   ];
 
   return (
@@ -49,9 +67,7 @@ const Index = () => {
             <div className="w-10 h-10 rounded-lg btn-glow flex items-center justify-center text-lg font-bold text-accent-foreground">
               AI
             </div>
-            <span className="text-xl font-bold tracking-tight">
-              AI Loan Approval System
-            </span>
+            <span className="text-xl font-bold tracking-tight">AI Loan Approval System</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Home</a>
@@ -61,7 +77,7 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-8 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 glow-text text-foreground">
           Loan Eligibility <span className="text-primary">Predictor</span>
@@ -71,75 +87,94 @@ const Index = () => {
         </p>
       </div>
 
-      {/* Form Card */}
-      <div className="relative z-10 max-w-2xl mx-auto px-6 pb-20">
-        <form onSubmit={handleSubmit} className="glass glow-border card-3d rounded-2xl p-8 space-y-5">
+      {/* Content */}
+      <div className="relative z-10 max-w-5xl mx-auto px-6 pb-20">
+        <div className={`grid gap-8 ${result ? "md:grid-cols-2" : "max-w-2xl mx-auto"}`}>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="glass glow-border card-3d rounded-2xl p-8 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {fields.map((field) => (
+                <div key={field.name} className="space-y-1.5">
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <span>{field.icon}</span>
+                    {field.label}
+                  </label>
+                  <input
+                    type="number"
+                    name={field.name}
+                    value={formData[field.name as keyof typeof formData]}
+                    onChange={handleChange}
+                    placeholder={`Enter ${field.label.toLowerCase()}`}
+                    className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm outline-none input-glow transition-all focus:border-primary"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {fields.map((field) => (
-              <div key={field.name} className="space-y-1.5">
+            {/* Dropdowns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <span>{field.icon}</span>
-                  {field.label}
+                  <span>🎓</span> Education
                 </label>
-                <input
-                  type={field.type}
-                  name={field.name}
-                  value={formData[field.name]}
+                <select
+                  name="education"
+                  value={formData.education}
                   onChange={handleChange}
-                  placeholder={`Enter ${field.label.toLowerCase()}`}
-                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm outline-none input-glow transition-all focus:border-primary"
-                />
+                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground text-sm outline-none input-glow transition-all focus:border-primary appearance-none cursor-pointer"
+                >
+                  <option value="Graduate">Graduate</option>
+                  <option value="Not Graduate">Not Graduate</option>
+                </select>
               </div>
-            ))}
-          </div>
-
-          {/* Dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <span>🎓</span> Education
-              </label>
-              <select
-                name="education"
-                value={formData.education}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground text-sm outline-none input-glow transition-all focus:border-primary appearance-none cursor-pointer"
-              >
-                <option value="Graduate">Graduate</option>
-                <option value="Not Graduate">Not Graduate</option>
-              </select>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <span>💼</span> Self Employed
+                </label>
+                <select
+                  name="self_employed"
+                  value={formData.self_employed}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground text-sm outline-none input-glow transition-all focus:border-primary appearance-none cursor-pointer"
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <span>💼</span> Self Employed
-              </label>
-              <select
-                name="selfEmployed"
-                value={formData.selfEmployed}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground text-sm outline-none input-glow transition-all focus:border-primary appearance-none cursor-pointer"
-              >
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-          </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full py-4 rounded-xl btn-glow text-accent-foreground font-semibold text-base tracking-wide uppercase"
-          >
-            🚀 Predict Eligibility
-          </button>
-        </form>
+            {/* Error */}
+            {error && (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 rounded-xl btn-glow text-accent-foreground font-semibold text-base tracking-wide uppercase flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Predicting...
+                </>
+              ) : (
+                "🚀 Predict Eligibility"
+              )}
+            </button>
+          </form>
+
+          {/* Results */}
+          {result && <PredictionResults result={result} />}
+        </div>
       </div>
 
-      {/* AI Chat FAB */}
-      <button className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full btn-glow flex items-center justify-center text-accent-foreground font-bold text-sm shadow-lg">
-        AI
-      </button>
+      {/* AI Chat */}
+      <AIChatWidget />
     </div>
   );
 };
