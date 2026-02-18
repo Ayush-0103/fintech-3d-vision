@@ -60,22 +60,6 @@ const Index = () => {
       <div className="fixed top-20 left-10 w-72 h-72 rounded-full bg-[hsl(var(--glow)/0.06)] blur-3xl float-animation pointer-events-none" />
       <div className="fixed bottom-20 right-10 w-96 h-96 rounded-full bg-[hsl(210_80%_40%/0.05)] blur-3xl float-animation pointer-events-none" style={{ animationDelay: "3s" }} />
 
-      {/* Navbar */}
-      <nav className="relative z-10 glass glow-border">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg btn-glow flex items-center justify-center text-lg font-bold text-accent-foreground">
-              AI
-            </div>
-            <span className="text-xl font-bold tracking-tight">AI Loan Approval System</span>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Home</a>
-            <a href="#" className="hover:text-foreground transition-colors">About</a>
-            <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-8 text-center">
